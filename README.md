@@ -23,8 +23,8 @@ Usage Examples
 Two complete usage examples along with the necessary CMake code is provided in
 the mcpl-geant4 repository at:
 
-    * https://github.com/mctools/mcpl-geant4/tree/main/example_write
-    * https://github.com/mctools/mcpl-geant4/tree/main/example_read
+* https://github.com/mctools/mcpl-geant4/tree/main/example_write
+* https://github.com/mctools/mcpl-geant4/tree/main/example_read
 
 Installation and Configuration
 ------------------------------
