@@ -21,7 +21,7 @@
 
 [project]
 name = "mcpl-geant4"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [ "mcpl-core>=1.9.80" ]
 readme = "README.md"
 license = {file = "LICENSE"}
