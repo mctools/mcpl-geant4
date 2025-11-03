@@ -28,6 +28,9 @@ def main( reporoot ):
     if not ruff:
         raise SystemExit('ERROR: ruff command not available')
     files = sorted(reporoot.rglob('*.py'))
+    d = reporoot.joinpath('venv')
+    if d.is_dir():
+        files = [ f for f in files if d not in f.parents ]
     rv = subprocess.run(['ruff','check'] + [str(f) for f in files] )
     if rv.returncode!=0:
         raise SystemExit(1)
