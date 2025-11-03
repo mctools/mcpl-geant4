@@ -21,8 +21,8 @@
 
 [project]
 name = "mcpl-geant4"
-version = "0.0.2"
-dependencies = [ "mcpl-core>=1.9.80" ]
+version = "0.0.4"
+dependencies = [ "mcpl-core>=2.2.0" ]
 readme = "README.md"
 license = {file = "LICENSE"}
 description = "Bindings supporting MCPL usage in Geant4."
