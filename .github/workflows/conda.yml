@@ -80,12 +80,6 @@ jobs:
           cmake --version
           pip list
 
-      #############################################
-      #TEMPORARY:
-      - name: TEMPORARY install MCPL2 from development branch
-        run: pip install "git+https://github.com/mctools/mcpl@path_to_mcpl2#subdirectory=mcpl_core"
-      ##################################
-
       - name: Install source
         run: pip install ./src
 
