@@ -102,8 +102,8 @@ void G4MCPLWriter::Store( const G4Step * step, const G4StepPoint* pt )
   G4Track * trk = step->GetTrack();
   const G4DynamicParticle * dynpar = trk->GetDynamicParticle();
   m_p.pdgcode = dynpar->GetPDGcode();
-  if (!m_p.pdgcode&&dynpar->GetParticleDefinition()->GetParticleName()=="opticalphoton") {
-    m_p.pdgcode=22;//store optical photons as regular photons
+  if ( m_p.pdgcode == -22 || ( !m_p.pdgcode && dynpar->GetParticleDefinition()->GetParticleName()=="opticalphoton" ) ) {
+    m_p.pdgcode=22;//store optical photons as regular photons (Geant4 10.6 and later encode them as -22)
   }
 
   m_p.time = pt->GetGlobalTime() / CLHEP::millisecond;
