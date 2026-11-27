@@ -30,6 +30,8 @@
 
 G4MCPLGenerator::G4MCPLGenerator(const G4String& inputFile)
   : G4VUserPrimaryGeneratorAction(),
+    m_p(0),
+    m_gun(0),
     m_currentPDG(0),
     m_currentPartDef(0),
     m_nUnknownPDG(0),
