@@ -52,6 +52,49 @@ G4MCPLGenerator::~G4MCPLGenerator()
   delete m_gun;
 }
 
+void G4MCPLGenerator::SetPDGCodeZero(const char * particlename,
+                                     const char * fctname)
+{
+  if (m_mcplfile.internal) {
+    std::ostringstream cmt;
+    cmt << fctname << " must be called before the first event.";
+    G4Exception("G4MCPLGenerator::SetPDGCodeZero()", "G4MCPLGenerator08",
+                FatalException, cmt.str().c_str());
+    return;
+  }
+  m_pdgZeroName = particlename;
+}
+
+void G4MCPLGenerator::SetPDGCodeZeroAsGeantino()
+{
+  SetPDGCodeZero("geantino","SetPDGCodeZeroAsGeantino");
+}
+
+void G4MCPLGenerator::SetPDGCodeZeroAsChargedGeantino()
+{
+  SetPDGCodeZero("chargedgeantino","SetPDGCodeZeroAsChargedGeantino");
+}
+
+void G4MCPLGenerator::SetPDGCodeZeroIgnored()
+{
+  SetPDGCodeZero("","SetPDGCodeZeroIgnored");
+}
+
+bool G4MCPLGenerator::IsPDGCodeZeroAsGeantino() const
+{
+  return m_pdgZeroName == "geantino";
+}
+
+bool G4MCPLGenerator::IsPDGCodeZeroAsChargedGeantino() const
+{
+  return m_pdgZeroName == "chargedgeantino";
+}
+
+bool G4MCPLGenerator::IsPDGCodeZeroIgnored() const
+{
+  return m_pdgZeroName.empty();
+}
+
 bool G4MCPLGenerator::UseParticle(const mcpl_particle_t*) const
 {
   return true;
@@ -126,9 +169,11 @@ void G4MCPLGenerator::FindNext()
       continue;
     }
 
-    if (m_p->pdgcode==0) {
+    if (m_p->pdgcode==0 && m_pdgZeroName.empty()) {
       G4Exception("G4MCPLGenerator::GeneratePrimaries()", "G4MCPLGenerator04",
-                  JustWarning, "Ignoring particle in input with invalid pdg code (0).");
+                  JustWarning, "Ignoring particle in input with PDG code 0 (call"
+                  " SetPDGCodeZeroAsGeantino or SetPDGCodeZeroAsChargedGeantino"
+                  " to inject such particles as geantinos).");
       continue;
     }
 
@@ -153,12 +198,23 @@ void G4MCPLGenerator::FindNext()
 
 G4ParticleDefinition* G4MCPLGenerator::LookupPDG(G4int pdgcode)
 {
-  if (m_currentPDG == pdgcode)
+  if (m_currentPartDef && m_currentPDG == pdgcode)
     return m_currentPartDef;
   m_currentPDG = pdgcode;
   std::map<G4int,G4ParticleDefinition*>::const_iterator it = m_pdg2pdef.find(pdgcode);
   if (it!=m_pdg2pdef.end()) {
     m_currentPartDef = it->second;
+  } else if (pdgcode==0) {
+    m_currentPartDef = G4ParticleTable::GetParticleTable()->FindParticle(m_pdgZeroName);
+    if (!m_currentPartDef) {
+      std::ostringstream cmt;
+      cmt << "The particle \"" << m_pdgZeroName << "\" requested for"
+          << " particles with PDG code 0 is not defined (it must be defined"
+          << " by the physics list).";
+      G4Exception("G4MCPLGenerator::GeneratePrimaries()", "G4MCPLGenerator09",
+                  FatalException, cmt.str().c_str());
+    }
+    m_pdg2pdef[pdgcode] = m_currentPartDef;
   } else {
     m_currentPartDef = G4ParticleTable::GetParticleTable()->FindParticle(pdgcode);
     if ( !m_currentPartDef && (pdgcode/100000000 == 10)) {

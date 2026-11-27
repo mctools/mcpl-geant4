@@ -60,6 +60,17 @@ class G4MCPLGenerator : public G4VUserPrimaryGeneratorAction
     virtual ~G4MCPLGenerator();
     virtual void GeneratePrimaries(G4Event*);
 
+    //Particles with PDG code 0 in the input file (for instance geantinos
+    //written by G4MCPLWriter) are ignored by default. Call one of these before
+    //the first event to use them as geantinos ("geantino" or
+    //"chargedgeantino") instead, or to ignore them again:
+    void SetPDGCodeZeroAsGeantino();
+    void SetPDGCodeZeroAsChargedGeantino();
+    void SetPDGCodeZeroIgnored();
+    bool IsPDGCodeZeroAsGeantino() const;
+    bool IsPDGCodeZeroAsChargedGeantino() const;
+    bool IsPDGCodeZeroIgnored() const;
+
   protected:
 
     //Reimplement this to filter input particles (default implementation
@@ -78,6 +89,7 @@ class G4MCPLGenerator : public G4VUserPrimaryGeneratorAction
     G4MCPLGenerator(const G4MCPLGenerator&);
     void FindNext();
     G4ParticleDefinition* LookupPDG(G4int);
+    void SetPDGCodeZero(const char * particlename, const char * fctname);
 
     mcpl_file_t m_mcplfile;
     const mcpl_particle_t * m_p;
@@ -87,6 +99,7 @@ class G4MCPLGenerator : public G4VUserPrimaryGeneratorAction
     std::map<G4int,G4ParticleDefinition*> m_pdg2pdef;
     unsigned long long m_nUnknownPDG;
     G4String m_inputFile;
+    G4String m_pdgZeroName;//empty if particles with PDG code 0 are ignored
 };
 
 #endif
