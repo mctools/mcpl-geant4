@@ -110,3 +110,6 @@ jobs:
 
       - name: Run example_read
         run: ./instexample_read/bin/myapp myoutput.mcpl
+
+      - name: Run tests
+        run: python3 ./src/tests/run_tests.py
