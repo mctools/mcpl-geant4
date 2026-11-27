@@ -90,15 +90,6 @@ G4MCPLWriter::G4MCPLWriter( const G4String& outputFile,
                         " the sum of the weights of their primary particles" );
   mcpl_hdr_add_stat_sum( m_f, "geant4_nevts", -1.0 );
   mcpl_hdr_add_stat_sum( m_f, "initial_geant4_weights", -1.0 );
-
-  G4String ufdescr = UserFlagsDescription();
-  if (!ufdescr.empty()) {
-    std::stringstream tmp;
-    tmp << "UserFlagDescription: "<<ufdescr;
-    mcpl_hdr_add_comment( m_f, tmp.str().c_str() );
-    mcpl_enable_userflags( m_f );
-    m_store_userflags = true;
-  }
 }
 
 G4MCPLWriter::~G4MCPLWriter()
@@ -184,6 +175,20 @@ void G4MCPLWriter::Initialize( G4HCofThisEvent* )
 
 void G4MCPLWriter::Store( const G4Step * step, const G4StepPoint* pt )
 {
+  if ( !m_userflags_decided ) {
+    //Decided here rather than in the constructor, where the virtual
+    //UserFlagsDescription of derived classes can not be called (the header is
+    //written with the first particle, so it can still be changed):
+    m_userflags_decided = true;
+    G4String ufdescr = UserFlagsDescription();
+    if (!ufdescr.empty()) {
+      std::stringstream tmp;
+      tmp << "UserFlagDescription: "<<ufdescr;
+      mcpl_hdr_add_comment( m_f, tmp.str().c_str() );
+      mcpl_enable_userflags( m_f );
+      m_store_userflags = true;
+    }
+  }
   G4Track * trk = step->GetTrack();
   const G4DynamicParticle * dynpar = trk->GetDynamicParticle();
   m_p->pdgcode = dynpar->GetPDGcode();

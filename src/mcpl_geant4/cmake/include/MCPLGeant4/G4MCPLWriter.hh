@@ -113,6 +113,7 @@ class G4MCPLWriter : public G4VSensitiveDetector
     bool m_store_polarisation;
     bool m_store_userflags;
     bool m_gzip;
+    bool m_userflags_decided = false;
     std::uint64_t m_nevts = 0;
     double m_sumweights = 0.0;
 };
