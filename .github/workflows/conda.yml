@@ -97,7 +97,7 @@ jobs:
       - name: Run example_write
         run: ./instexample_write/bin/myapp
 
-      - run: mcpltool myoutput.mcpl.gz
+      - run: mcpltool myoutput.mcpl
 
       - name: Cfg example_read
         run: cmake -S ./src/example_read -B ./bldexample_read -DCMAKE_INSTALL_PREFIX=./instexample_read
@@ -109,4 +109,4 @@ jobs:
         run: cmake --install ./bldexample_read
 
       - name: Run example_read
-        run: ./instexample_read/bin/myapp myoutput.mcpl.gz
+        run: ./instexample_read/bin/myapp myoutput.mcpl

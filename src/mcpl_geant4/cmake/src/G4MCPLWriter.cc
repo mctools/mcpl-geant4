@@ -21,7 +21,25 @@
 
 #include "MCPLGeant4/G4MCPLWriter.hh"
 #include "G4Track.hh"
+#include <cstdlib>
+#include <filesystem>
 #include <sstream>
+
+namespace {
+  //The output file names, from mcpl_name_helper:
+  std::string G4MCPLWriter_name( const std::string& filename, char mode )
+  {
+    char * c = mcpl_name_helper( filename.c_str(), mode );
+    std::string res( c );
+    std::free( c );
+    return res;
+  }
+  bool G4MCPLWriter_pathexists( const std::string& path )
+  {
+    std::error_code ec;
+    return std::filesystem::exists( std::filesystem::symlink_status( path, ec ) );
+  }
+}
 
 G4MCPLWriter::G4MCPLWriter( const G4String& outputFile,
                             const G4String& name )
@@ -30,7 +48,31 @@ G4MCPLWriter::G4MCPLWriter( const G4String& outputFile,
     m_store_userflags(false)
 {
   std::memset(&m_p,0,sizeof(m_p));
-  m_f = mcpl_create_outfile( outputFile.c_str() );
+
+  //Names ending in .mcpl.gz give compressed files (written uncompressed and
+  //compressed when closed), other names give .mcpl files:
+  const std::string given( outputFile );
+  const std::string gzsuffix( ".mcpl.gz" );
+  m_gzip = ( given.size() >= gzsuffix.size()
+             && given.compare( given.size() - gzsuffix.size(), gzsuffix.size(),
+                               gzsuffix ) == 0 );
+  const std::string fn = G4MCPLWriter_name( given, 'M' );
+  const std::string fngz = G4MCPLWriter_name( given, 'G' );
+  const std::string bn = G4MCPLWriter_name( given, 'm' );
+  const std::string bngz = G4MCPLWriter_name( given, 'g' );
+  //Refuse existing files right away, rather than when the file is closed:
+  std::ostringstream problem;
+  if ( m_gzip && G4MCPLWriter_pathexists( fngz ) )
+    problem << "The output file \"" << bngz << "\" already exists.";
+  else if ( m_gzip && G4MCPLWriter_pathexists( fn ) )
+    problem << "The output file \"" << bngz << "\" can not be written, since \""
+            << bn << "\" (which it is compressed from) already exists.";
+  else if ( !m_gzip && G4MCPLWriter_pathexists( fn ) )
+    problem << "The output file \"" << bn << "\" already exists.";
+  if ( !problem.str().empty() )
+    G4Exception("G4MCPLWriter::G4MCPLWriter()", "G4MCPLWriter02",
+                FatalException, problem.str().c_str());
+  m_f = mcpl_create_outfile( fn.c_str() );
 
   {
     std::stringstream tmp;
@@ -50,7 +92,10 @@ G4MCPLWriter::G4MCPLWriter( const G4String& outputFile,
 
 G4MCPLWriter::~G4MCPLWriter()
 {
-  mcpl_closeandgzip_outfile(m_f);
+  if ( m_gzip )
+    mcpl_closeandgzip_outfile(m_f);
+  else
+    mcpl_close_outfile(m_f);
 }
 
 G4bool G4MCPLWriter::ProcessHits(G4Step * step,G4TouchableHistory*)

@@ -56,7 +56,9 @@ class G4MCPLWriter : public G4VSensitiveDetector
   public:
 
     //The constructor needs the name of the output MCPL file, and optionally the
-    //name argument to be passed to the G4VSensitiveDetector constructor:
+    //name argument to be passed to the G4VSensitiveDetector constructor. The
+    //file is a .mcpl file, or a compressed .mcpl.gz file if the name ends in
+    //.mcpl.gz. If the file already exists, the constructor ends with an error:
     G4MCPLWriter( const G4String& outputFile,
                   const G4String& name = "G4MCPLWriter" );
 
@@ -104,6 +106,7 @@ class G4MCPLWriter : public G4VSensitiveDetector
     mcpl_particle_t m_p;
     bool m_store_polarisation;
     bool m_store_userflags;
+    bool m_gzip;
 };
 
 #endif
