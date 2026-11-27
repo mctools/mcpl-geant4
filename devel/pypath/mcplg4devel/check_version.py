@@ -55,7 +55,7 @@ def main( reporoot ):
             v = f.read_text().strip()
         else:
             v = extract_bruteforce(f,linebegin,lineend)
-        print(f"  .. got {repr(v)}")
+        print(f"  .. got {v!r}")
         assert v
         if not actual_version:
             actual_version = v
