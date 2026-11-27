@@ -21,6 +21,9 @@
 
 #include "MCPLGeant4/G4MCPLWriter.hh"
 #include "G4Track.hh"
+#include "G4Event.hh"
+#include "G4EventManager.hh"
+#include "G4PrimaryVertex.hh"
 #include <cstdlib>
 #include <filesystem>
 #include <sstream>
@@ -79,6 +82,15 @@ G4MCPLWriter::G4MCPLWriter( const G4String& outputFile,
     mcpl_hdr_set_srcname( m_f, tmp.str().c_str() );
   }
 
+  //Statistics of the simulated events, as stat:sum values (they are added up
+  //when files are merged). Space for them is reserved here, and the values are
+  //set when the file is closed:
+  mcpl_hdr_add_comment( m_f, "G4MCPLWriter stat:sum values : geant4_nevts is the"
+                        " number of simulated events, initial_geant4_weights is"
+                        " the sum of the weights of their primary particles" );
+  mcpl_hdr_add_stat_sum( m_f, "geant4_nevts", -1.0 );
+  mcpl_hdr_add_stat_sum( m_f, "initial_geant4_weights", -1.0 );
+
   G4String ufdescr = UserFlagsDescription();
   if (!ufdescr.empty()) {
     std::stringstream tmp;
@@ -91,6 +103,8 @@ G4MCPLWriter::G4MCPLWriter( const G4String& outputFile,
 
 G4MCPLWriter::~G4MCPLWriter()
 {
+  mcpl_hdr_add_stat_sum( m_f, "geant4_nevts", (double)m_nevts );
+  mcpl_hdr_add_stat_sum( m_f, "initial_geant4_weights", m_sumweights );
   if ( m_gzip )
     mcpl_closeandgzip_outfile(m_f);
   else
@@ -139,6 +153,33 @@ void G4MCPLWriter::EnablePolarisation()
 void G4MCPLWriter::EnableUniversalWeight(G4double w)
 {
   mcpl_enable_universal_weight(m_f,w);
+}
+
+namespace {
+  //The weight of the track of a primary particle is the product of the weights
+  //of the vertex and the particle (also for pre-assigned daughters):
+  double G4MCPLWriter_sumweights( const G4PrimaryParticle* pp, double vtxweight )
+  {
+    double w = vtxweight * pp->GetWeight();
+    for ( const G4PrimaryParticle* d = pp->GetDaughter(); d; d = d->GetNext() )
+      w += G4MCPLWriter_sumweights( d, vtxweight );
+    return w;
+  }
+}
+
+void G4MCPLWriter::Initialize( G4HCofThisEvent* )
+{
+  //Called at the start of each event, after its primary particles are
+  //generated:
+  const G4Event * evt = G4EventManager::GetEventManager()->GetConstCurrentEvent();
+  if ( !evt )
+    return;
+  ++m_nevts;
+  for ( G4int i = 0; i < evt->GetNumberOfPrimaryVertex(); ++i ) {
+    const G4PrimaryVertex * vtx = evt->GetPrimaryVertex(i);
+    for ( const G4PrimaryParticle* pp = vtx->GetPrimary(); pp; pp = pp->GetNext() )
+      m_sumweights += G4MCPLWriter_sumweights( pp, vtx->GetWeight() );
+  }
 }
 
 void G4MCPLWriter::Store( const G4Step * step, const G4StepPoint* pt )
