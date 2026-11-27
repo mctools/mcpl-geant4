@@ -213,7 +213,7 @@ void G4MCPLWriter::Store( const G4Step * step, const G4StepPoint* pt )
     if (!dm2) {
       if (m_p->ekin) {
         //inconsistent
-        G4Exception("G4MCPLGenerator::GeneratePrimaries()", "G4MCPLWriter01",
+        G4Exception("G4MCPLWriter::Store()", "G4MCPLWriter01",
                     JustWarning, "Captured particle has no momentum-direction but eKin>0. Choosing momdir (0,0,1).");
       }
       //arguably consistent if ekin=0, but we should in any case only put unit
