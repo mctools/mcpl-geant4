@@ -103,7 +103,7 @@ class G4MCPLWriter : public G4VSensitiveDetector
     G4MCPLWriter(const G4MCPLWriter&);
     void Store(const G4Step *, const G4StepPoint *);
     mcpl_outfile_t m_f;
-    mcpl_particle_t m_p;
+    mcpl_particle_t * m_p;
     bool m_store_polarisation;
     bool m_store_userflags;
     bool m_gzip;

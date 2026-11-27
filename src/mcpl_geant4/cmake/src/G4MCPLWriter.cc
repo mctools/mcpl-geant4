@@ -47,8 +47,6 @@ G4MCPLWriter::G4MCPLWriter( const G4String& outputFile,
     m_store_polarisation(false),
     m_store_userflags(false)
 {
-  std::memset(&m_p,0,sizeof(m_p));
-
   //Names ending in .mcpl.gz give compressed files (written uncompressed and
   //compressed when closed), other names give .mcpl files:
   const std::string given( outputFile );
@@ -73,6 +71,7 @@ G4MCPLWriter::G4MCPLWriter( const G4String& outputFile,
     G4Exception("G4MCPLWriter::G4MCPLWriter()", "G4MCPLWriter02",
                 FatalException, problem.str().c_str());
   m_f = mcpl_create_outfile( fn.c_str() );
+  m_p = mcpl_get_empty_particle( m_f );
 
   {
     std::stringstream tmp;
@@ -146,55 +145,55 @@ void G4MCPLWriter::Store( const G4Step * step, const G4StepPoint* pt )
 {
   G4Track * trk = step->GetTrack();
   const G4DynamicParticle * dynpar = trk->GetDynamicParticle();
-  m_p.pdgcode = dynpar->GetPDGcode();
-  if ( m_p.pdgcode == -22 || ( !m_p.pdgcode && dynpar->GetParticleDefinition()->GetParticleName()=="opticalphoton" ) ) {
-    m_p.pdgcode=22;//store optical photons as regular photons (Geant4 10.6 and later encode them as -22)
+  m_p->pdgcode = dynpar->GetPDGcode();
+  if ( m_p->pdgcode == -22 || ( !m_p->pdgcode && dynpar->GetParticleDefinition()->GetParticleName()=="opticalphoton" ) ) {
+    m_p->pdgcode=22;//store optical photons as regular photons (Geant4 10.6 and later encode them as -22)
   }
 
-  m_p.time = pt->GetGlobalTime() / CLHEP::millisecond;
-  m_p.weight = pt->GetWeight();
-  m_p.ekin = pt->GetKineticEnergy();//already in MeV
+  m_p->time = pt->GetGlobalTime() / CLHEP::millisecond;
+  m_p->weight = pt->GetWeight();
+  m_p->ekin = pt->GetKineticEnergy();//already in MeV
   const G4ThreeVector& pos = pt->GetPosition();
   const G4ThreeVector& dir = pt->GetMomentumDirection();
   const G4double tocm(1.0/CLHEP::cm);
-  m_p.position[0] = pos.x() * tocm;
-  m_p.position[1] = pos.y() * tocm;
-  m_p.position[2] = pos.z() * tocm;
-  m_p.direction[0] = dir.x();
-  m_p.direction[1] = dir.y();
-  m_p.direction[2] = dir.z();
+  m_p->position[0] = pos.x() * tocm;
+  m_p->position[1] = pos.y() * tocm;
+  m_p->position[2] = pos.z() * tocm;
+  m_p->direction[0] = dir.x();
+  m_p->direction[1] = dir.y();
+  m_p->direction[2] = dir.z();
   G4double dm2 = dir.mag2();
   if (fabs(dm2-1.0)>1.0e-12) {
     if (!dm2) {
-      if (m_p.ekin) {
+      if (m_p->ekin) {
         //inconsistent
         G4Exception("G4MCPLGenerator::GeneratePrimaries()", "G4MCPLWriter01",
                     JustWarning, "Captured particle has no momentum-direction but eKin>0. Choosing momdir (0,0,1).");
       }
       //arguably consistent if ekin=0, but we should in any case only put unit
       //directional vectors in mcpl:
-      m_p.direction[0] = m_p.direction[1] = 0.0;
-      m_p.direction[2] = 1.0;
+      m_p->direction[0] = m_p->direction[1] = 0.0;
+      m_p->direction[2] = 1.0;
     } else {
       //fix normalisation:
       dm2 = 1.0/sqrt(dm2);
-      m_p.direction[0] *= dm2;
-      m_p.direction[1] *= dm2;
-      m_p.direction[2] *= dm2;
+      m_p->direction[0] *= dm2;
+      m_p->direction[1] *= dm2;
+      m_p->direction[2] *= dm2;
     }
   }
 
   if (m_store_polarisation) {
     const G4ThreeVector& pol = pt->GetPolarization();
-    m_p.polarisation[0] = pol.x();
-    m_p.polarisation[1] = pol.y();
-    m_p.polarisation[2] = pol.z();
+    m_p->polarisation[0] = pol.x();
+    m_p->polarisation[1] = pol.y();
+    m_p->polarisation[2] = pol.z();
   }
 
   if (m_store_userflags) {
-    m_p.userflags = UserFlags(step);
+    m_p->userflags = UserFlags(step);
   }
 
-  mcpl_add_particle(m_f,&m_p);
+  mcpl_add_particle(m_f,m_p);
 
 }
