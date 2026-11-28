@@ -50,13 +50,16 @@
 #include "G4VSensitiveDetector.hh"
 #include "G4Track.hh"
 #include "mcpl.h"
+#include <cstdint>
 
 class G4MCPLWriter : public G4VSensitiveDetector
 {
   public:
 
     //The constructor needs the name of the output MCPL file, and optionally the
-    //name argument to be passed to the G4VSensitiveDetector constructor:
+    //name argument to be passed to the G4VSensitiveDetector constructor. The
+    //file is a .mcpl file, or a compressed .mcpl.gz file if the name ends in
+    //.mcpl.gz. If the file already exists, the constructor ends with an error:
     G4MCPLWriter( const G4String& outputFile,
                   const G4String& name = "G4MCPLWriter" );
 
@@ -82,6 +85,11 @@ class G4MCPLWriter : public G4VSensitiveDetector
     //describing the new behaviour):
     virtual G4bool ProcessHits(G4Step * step,G4TouchableHistory*);
 
+    //Counts the events and the weights of their primary particles, written to
+    //the file as stat:sum:geant4_nevts and stat:sum:initial_geant4_weights
+    //(derived classes overriding it must call it):
+    virtual void Initialize(G4HCofThisEvent*);
+
     //If desired, custom flags in the form of a 32bit integer can be stored in
     //the mcpl output along with each particle. To do so, override the next two
     //methods to calculate the custom user flags for each step plus a general
@@ -101,9 +109,13 @@ class G4MCPLWriter : public G4VSensitiveDetector
     G4MCPLWriter(const G4MCPLWriter&);
     void Store(const G4Step *, const G4StepPoint *);
     mcpl_outfile_t m_f;
-    mcpl_particle_t m_p;
+    mcpl_particle_t * m_p;
     bool m_store_polarisation;
     bool m_store_userflags;
+    bool m_gzip;
+    bool m_userflags_decided = false;
+    std::uint64_t m_nevts = 0;
+    double m_sumweights = 0.0;
 };
 
 #endif

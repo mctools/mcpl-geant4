@@ -21,8 +21,8 @@
 
 def main( reporoot ):
     print(reporoot)
-    import subprocess
     import shutil
+    import subprocess
     print("Checking ruff...")
     ruff = shutil.which('ruff')
     if not ruff:
@@ -31,7 +31,7 @@ def main( reporoot ):
     d = reporoot.joinpath('venv')
     if d.is_dir():
         files = [ f for f in files if d not in f.parents ]
-    rv = subprocess.run(['ruff','check'] + [str(f) for f in files] )
+    rv = subprocess.run(['ruff','check'] + [str(f) for f in files], check = False )
     if rv.returncode!=0:
         raise SystemExit(1)
     print("Checking ruff... DONE")

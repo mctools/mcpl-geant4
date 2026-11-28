@@ -20,8 +20,8 @@
 ################################################################################
 
 def parse_args():
-    from argparse import ArgumentParser, RawTextHelpFormatter
     import textwrap
+    from argparse import ArgumentParser, RawTextHelpFormatter
     def wrap(t,w=59):
         return textwrap.fill( ' '.join(t.split()), width=w )
 

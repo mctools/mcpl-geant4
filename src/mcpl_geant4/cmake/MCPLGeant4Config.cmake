@@ -46,7 +46,7 @@ if( NOT TARGET MCPL::MCPL )
       OUTPUT_STRIP_TRAILING_WHITESPACE
     )
   endif()
-  find_dependency( MCPL 1.9.80 REQUIRED )
+  find_dependency( MCPL 2.2.0 REQUIRED )
 endif()
 
 if ( NOT Geant4_LIBRARIES )
